@@ -26,20 +26,18 @@ print(BASE_DIR)
 
 try:
     from dotenv import find_dotenv, load_dotenv
-
     load_dotenv(find_dotenv(str(BASE_DIR / ".env")))
 except ImportError:
     print("dotenv not installed, skipping...")
 
 DOCKER = os.environ.get("DOCKER", "False").lower() == "true"
 
-# device type embedding models - "cpu" (default), "cuda" (nvidia gpu required) or "mps" (apple silicon) - choosing this right can lead to better performance
+# device type embedding models - "cpu" (default), "cuda" (nvidia gpu required) or "mps" (apple silicon)
 USE_CUDA = os.environ.get("USE_CUDA_DOCKER", "false")
 
 if USE_CUDA.lower() == "true":
     try:
         import torch
-
         assert torch.cuda.is_available(), "CUDA not available"
         DEVICE_TYPE = "cuda"
     except Exception as e:
@@ -55,7 +53,6 @@ else:
 
 try:
     import torch
-
     if torch.backends.mps.is_available() and torch.backends.mps.is_built():
         DEVICE_TYPE = "mps"
 except Exception:
@@ -105,13 +102,12 @@ for source in log_sources:
 
 log.setLevel(SRC_LOG_LEVELS["CONFIG"])
 
+####################################
+# WEBUI BRANDING
+####################################
 
-WEBUI_NAME = os.environ.get("WEBUI_NAME", "Open WebUI")
-if WEBUI_NAME != "Open WebUI":
-    WEBUI_NAME += " (Open WebUI)"
-
-WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
-
+WEBUI_NAME = "Heysalad ®"
+WEBUI_FAVICON_URL = "https://raw.githubusercontent.com/Hey-Salad/.github/8e1410b012b3601046ded8072317cd99076906f1/Sal.png"
 
 ####################################
 # ENV (dev,test,prod)
@@ -129,9 +125,7 @@ else:
     except Exception:
         PACKAGE_DATA = {"version": "0.0.0"}
 
-
 VERSION = PACKAGE_DATA["version"]
-
 
 # Function to parse each section
 def parse_section(section):
@@ -139,27 +133,21 @@ def parse_section(section):
     for li in section.find_all("li"):
         # Extract raw HTML string
         raw_html = str(li)
-
         # Extract text without HTML tags
         text = li.get_text(separator=" ", strip=True)
-
         # Split into title and content
         parts = text.split(": ", 1)
         title = parts[0].strip() if len(parts) > 1 else ""
         content = parts[1].strip() if len(parts) > 1 else text
-
         items.append({"title": title, "content": content, "raw": raw_html})
     return items
-
 
 try:
     changelog_path = BASE_DIR / "CHANGELOG.md"
     with open(str(changelog_path.absolute()), "r", encoding="utf8") as file:
         changelog_content = file.read()
-
 except Exception:
     changelog_content = (pkgutil.get_data("open_webui", "CHANGELOG.md") or b"").decode()
-
 
 # Convert markdown content to HTML
 html_content = markdown.markdown(changelog_content)
@@ -174,23 +162,22 @@ changelog_json = {}
 for version in soup.find_all("h2"):
     version_number = version.get_text().strip().split(" - ")[0][1:-1]  # Remove brackets
     date = version.get_text().strip().split(" - ")[1]
-
+    
     version_data = {"date": date}
-
+    
     # Find the next sibling that is a h3 tag (section title)
     current = version.find_next_sibling()
-
+    
     while current and current.name != "h2":
         if current.name == "h3":
             section_title = current.get_text().lower()  # e.g., "added", "fixed"
             section_items = parse_section(current.find_next_sibling("ul"))
             version_data[section_title] = section_items
-
+            
         # Move to the next element
         current = current.find_next_sibling()
-
+    
     changelog_json[version_number] = version_data
-
 
 CHANGELOG = changelog_json
 
@@ -208,7 +195,6 @@ ENABLE_FORWARD_USER_INFO_HEADERS = (
     os.environ.get("ENABLE_FORWARD_USER_INFO_HEADERS", "False").lower() == "true"
 )
 
-
 ####################################
 # WEBUI_BUILD_HASH
 ####################################
@@ -224,7 +210,7 @@ DATA_DIR = Path(os.getenv("DATA_DIR", BACKEND_DIR / "data")).resolve()
 if FROM_INIT_PY:
     NEW_DATA_DIR = Path(os.getenv("DATA_DIR", OPEN_WEBUI_DIR / "data")).resolve()
     NEW_DATA_DIR.mkdir(parents=True, exist_ok=True)
-
+    
     # Check if the data directory exists in the package directory
     if DATA_DIR.exists() and DATA_DIR != NEW_DATA_DIR:
         log.info(f"Moving {DATA_DIR} to {NEW_DATA_DIR}")
@@ -234,15 +220,14 @@ if FROM_INIT_PY:
                 shutil.copytree(item, dest, dirs_exist_ok=True)
             else:
                 shutil.copy2(item, dest)
-
+                
         # Zip the data directory
         shutil.make_archive(DATA_DIR.parent / "open_webui_data", "zip", DATA_DIR)
-
+        
         # Remove the old data directory
         shutil.rmtree(DATA_DIR)
-
+    
     DATA_DIR = Path(os.getenv("DATA_DIR", OPEN_WEBUI_DIR / "data"))
-
 
 STATIC_DIR = Path(os.getenv("STATIC_DIR", OPEN_WEBUI_DIR / "static"))
 
@@ -254,7 +239,6 @@ if FROM_INIT_PY:
     FRONTEND_BUILD_DIR = Path(
         os.getenv("FRONTEND_BUILD_DIR", OPEN_WEBUI_DIR / "frontend")
     ).resolve()
-
 
 ####################################
 # Database
@@ -319,7 +303,6 @@ else:
 RESET_CONFIG_ON_START = (
     os.environ.get("RESET_CONFIG_ON_START", "False").lower() == "true"
 )
-
 
 ENABLE_REALTIME_CHAT_SAVE = (
     os.environ.get("ENABLE_REALTIME_CHAT_SAVE", "False").lower() == "true"
